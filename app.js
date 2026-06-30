@@ -310,9 +310,10 @@ if (isBanned(clientIP)) {
       const pending = userData[cid].pendingCommand;
       if (pending) {
         userData[cid].pendingCommand = null;
+        /* 800 ms gives Chrome mobile time to fully settle after backgrounding */
         setTimeout(() => {
           if (users[socket.id]) users[socket.id].emit(pending.event, pending.data);
-        }, 400);
+        }, 800);
       }
     }
 
