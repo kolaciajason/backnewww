@@ -306,13 +306,23 @@ if (isBanned(clientIP)) {
       userData[cid].page = data.page || userData[cid].page;
       userData[cid].activeSocketId = socket.id;
 
-      /* Replay any command that was sent while the socket was offline */
+      /* Replay any command that was sent while the socket was offline.
+         IMPORTANT: do NOT clear pendingCommand yet — only clear it after the
+         emit actually succeeds.  If Chrome kills the socket again inside the
+         delay window we want the next reconnect to retry delivery. */
       const pending = userData[cid].pendingCommand;
       if (pending) {
-        userData[cid].pendingCommand = null;
-        /* 800 ms gives Chrome mobile time to fully settle after backgrounding */
         setTimeout(() => {
-          if (users[socket.id]) users[socket.id].emit(pending.event, pending.data);
+          if (!userData[cid]) return;
+          /* Use the CURRENT active socket, not the one from the closure —
+             Chrome may have reconnected multiple times during the delay */
+          const activeSid = userData[cid].activeSocketId;
+          if (activeSid && users[activeSid]) {
+            users[activeSid].emit(pending.event, pending.data);
+            userData[cid].pendingCommand = null; /* clear only after emit */
+            console.log(`[REPLAY] ${pending.event} → ${cid}`);
+          }
+          /* If socket is gone, pendingCommand stays for the next reconnect */
         }, 800);
       }
     }
