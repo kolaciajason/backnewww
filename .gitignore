@@ -1,0 +1,4 @@
+node_modules/
+ban_ips.txt
+.env
+*.log
