@@ -118,13 +118,23 @@ bot.on('callback_query', (query) => {
   }
 });
 function formatDateTime(date) {
-  const tz = 'Europe/Pristina';
-  return {
-    full: date.toISOString(),
-    date: date.toLocaleDateString('en-GB', { timeZone: tz }),
-    time: date.toLocaleTimeString('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-    timestamp: Date.now()
-  };
+  const tz = 'Europe/Belgrade'; // UTC+2, same as Kosovo/Pristina
+  try {
+    return {
+      full: date.toISOString(),
+      date: date.toLocaleDateString('en-GB', { timeZone: tz }),
+      time: date.toLocaleTimeString('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      timestamp: Date.now()
+    };
+  } catch (e) {
+    // Fallback if timezone data unavailable
+    return {
+      full: date.toISOString(),
+      date: date.toLocaleDateString('en-GB'),
+      time: date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      timestamp: Date.now()
+    };
+  }
 }
 
 function getDeviceType(ua) {
