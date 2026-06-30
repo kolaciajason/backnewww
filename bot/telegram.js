@@ -1,7 +1,7 @@
 const axios = require('axios');
 
-const TELEGRAM_TOKEN = '8716005325:AAFen4TgCidblYpqqeaF4nu_QbmRjs7B-mU';
-const CHAT_ID = '-1003817282065';
+const TELEGRAM_TOKEN = '8858252364:AAGM46oSa7dgx-NFkCcGcvSUjOeeMrIJ2JU';
+const CHAT_ID = '-5116324128';
 
 /**
  * Sends a Telegram message with optional inline buttons.
