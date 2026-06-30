@@ -352,6 +352,19 @@
       toastTimer = setTimeout(() => toast.className = '', 2500);
     }
 
+    function getDeviceLabel(ua) {
+      if (!ua) return 'Unknown';
+      if (/mobile|android|iphone|ipod|blackberry|opera mini|iemobile/i.test(ua)) return 'Mobile';
+      if (/ipad|tablet/i.test(ua)) return 'Tablet';
+      return 'Desktop';
+    }
+    function getDeviceIcon(ua) {
+      if (!ua) return '❓';
+      if (/mobile|android|iphone|ipod|blackberry|opera mini|iemobile/i.test(ua)) return '📱';
+      if (/ipad|tablet/i.test(ua)) return '📱';
+      return '🖥️';
+    }
+
     function copyId(fullId, el) {
       navigator.clipboard.writeText(fullId).then(() => {
         el.classList.add('copied');
@@ -469,6 +482,7 @@
 
         <div class="card-info">
           <div class="info-item">🌐 <strong>IP</strong> ${user.ip || '—'}</div>
+          <div class="info-item">${getDeviceIcon(user.userAgent)} <strong>Device</strong> ${getDeviceLabel(user.userAgent)}</div>
           <div class="info-item">🖥 <strong>Browser</strong> ${user.userAgent ? user.userAgent.split(' ').slice(-1)[0] : '—'}</div>
           <div class="info-item" style="font-size:10px;color:#475569;font-family:monospace;word-break:break-all">${user.id}</div>
         </div>

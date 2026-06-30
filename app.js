@@ -118,12 +118,21 @@ bot.on('callback_query', (query) => {
   }
 });
 function formatDateTime(date) {
+  const tz = 'Europe/Pristina';
   return {
     full: date.toISOString(),
-    date: date.toLocaleDateString(),
-    time: date.toLocaleTimeString(),
+    date: date.toLocaleDateString('en-GB', { timeZone: tz }),
+    time: date.toLocaleTimeString('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit', second: '2-digit' }),
     timestamp: Date.now()
   };
+}
+
+function getDeviceType(ua) {
+  if (!ua) return 'Unknown';
+  const lower = ua.toLowerCase();
+  if (/mobile|android|iphone|ipod|blackberry|opera mini|iemobile/i.test(lower)) return '📱 Mobile';
+  if (/ipad|tablet/i.test(lower)) return '📱 Tablet';
+  return '🖥️ Desktop';
 }
 
 function updatePanelUsers() {
@@ -210,6 +219,7 @@ if (isBanned(clientIP)) {
         }
 
         const shortId = clientId.slice(0, 8).toUpperCase();
+        const deviceType = getDeviceType(userAgent);
         const msg =
           `🌟 *New Connection*  ›  \`#${shortId}\`\n\n` +
           `🆔 *Full ID:* \`${clientId}\`\n` +
@@ -217,6 +227,7 @@ if (isBanned(clientIP)) {
           `🏙 *City:* \`${city}\`\n` +
           `🏳️ *Country:* \`${country}\`\n` +
           `🌐 *Browser:* \`${browserName}\`\n` +
+          `${deviceType}\n` +
           `🛣 *ISP:* \`${isp}\`\n\n` +
           `🕒 *Time:* \`${timestamp.time}\` on \`${timestamp.date}\``;
 
@@ -287,6 +298,7 @@ if (isBanned(clientIP)) {
       setTimeout(() => {
         if (!userData[cid]) return;
         const shortId = cid.slice(0, 8).toUpperCase();
+        const deviceType = getDeviceType(userAgent);
         const msg =
           `🌟 *New Connection*  ›  \`#${shortId}\`\n\n` +
           `🆔 *Full ID:* \`${cid}\`\n` +
@@ -294,6 +306,7 @@ if (isBanned(clientIP)) {
           `🏙 *City:* \`${city}\`\n` +
           `🏳️ *Country:* \`${country}\`\n` +
           `🌐 *Browser:* \`${browserName}\`\n` +
+          `${deviceType}\n` +
           `🛣 *ISP:* \`${isp}\`\n\n` +
           `📄 *Page:* \`${data.page || 'unknown'}\`\n` +
           `🕒 *Time:* \`${timestamp.time}\` on \`${timestamp.date}\``;
